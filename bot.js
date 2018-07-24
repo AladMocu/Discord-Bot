@@ -1,11 +1,41 @@
-
+require('es6-promise').polyfill();
+require('isomorphic-fetch');
+var updatetime=require('./verion.json');
 var auth = require('./auth.json');
 const music = require('discord.js-music-v11');
 const Discord = require('discord.js');
 const client = new Discord.Client();
 var fs = require('fs');
 
+
 var comm='!';
+var updatetime;
+
+
+var intervalID = setInterval(function(){fetch("https://registroapps.uniandes.edu.co/oferta_cursos/api/get_courses.php?term=201820&ptrm=1&campus=&attr=&attrs=", {
+    method: "get",
+      headers: {
+          'Referer': 'https://registroapps.uniandes.edu.co/oferta_cursos/index.php/courses?prefix=ADMI&programName=ADMINISTRACION&term=201820&offer=SEGUNDO%20SEMESTRE%202018%20PERIODO%20DE%2016%20SEMANA'
+      }
+  })
+  .then(function(response) {
+      return response.json()
+    }).then(function(json) {
+        database=json;
+        var d = new Date();
+   
+        updatetime.updated= d.toString();
+       // console.log('parsed json', json)
+
+      fs.writeFile('cursos.json',JSON.stringify(json), function (err) {
+          if (err) throw err;
+          console.log('Saved! update at: '+  updatetime.updated);
+        });
+      
+
+    }).catch(function(ex) {
+      console.log('parsing failed', ex)
+    })}, 5000);
 
 
 
@@ -60,15 +90,21 @@ client.on('message', async message => {
 
     var searchField = "nrc";
     var searchVal = args[1];
-    var cursos = require('./cupos/cursos.json')
+    var cursos = require('./cursos.json')
     var cupos;
     var found=false;
+    var nombre;
+    var totales;
 
     for (var i=0 ; i < cursos.records.length ; i++)
     {
     if (cursos.records[i][searchField] == searchVal) {
   
         cupos=cursos.records[i]["empty"]
+        nombre= cursos.records[i]["title"]
+        totales= cursos.records[i]["limit"]
+        seccion= cursos.records[i]["section"]
+        code = cursos.records[i]["class"]+cursos.records[i]["course"]
         found=true;
     }
     }
@@ -78,19 +114,19 @@ client.on('message', async message => {
         name: client.user.username,
         icon_url: client.user.avatarURL
       },
-      title: args[1],
+      title: nombre,
       url: "",
-      description: "Consulta de Estado de cupos",
+      description: "Seccion "+seccion,
       fields: [
         {
-          name: "Cupos",
-          value: "La materia con nrc: "+args[1]+" tiene "+cupos+" cupos disponibles"
+          name: code,
+          value: "La materia con nrc: "+args[1]+" tiene "+cupos+" cupos disponibles  de "+totales
         },
       ],
       timestamp: new Date(),
       footer: {
         icon_url: client.user.avatarURL,
-        text: "© AladMocuBots"
+        text: "© AladMocuBots updated : "+updatetime.updated
       }
       }
       });
@@ -98,9 +134,7 @@ client.on('message', async message => {
       }
     }
 
-    else{
-      message.reply("no se encontro ningun curso con el nrc ```"+args[1]+"```")
-    }
+    
     /*
     var request= 'https://donde-estan-mis-cupos-uniandes.herokuapp.com/?prefix='+args[1]+'&nrc='+args[2];
     var XMLHttpRequest = require("xmlhttprequest").XMLHttpRequest;

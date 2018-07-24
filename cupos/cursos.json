@@ -1,0 +1,3 @@
+<br />
+<b>Warning</b>:  oci_connect() [<a href='function.oci-connect'>function.oci-connect</a>]: ORA-12520: TNS:listener could not find available handler for requested type of server in <b>/datos/hypertext/appsregistro.uniandes.edu.co.80/oferta_cursos/include/conexion.inc</b> on line <b>29</b><br />
+No se puede conectar al servidor NIFE PROD.
