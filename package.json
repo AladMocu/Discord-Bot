@@ -1,0 +1,23 @@
+{
+  "name": "Argus",
+  "version": "1.0.0",
+  "description": "My own Discord bot",
+  "main": "bot.js",
+  "author": "AladMocu",
+  "dependencies": {
+    "discord.io": "https://github.com/woor/discord.io/tarball/gateway_v6",
+    "discord.js": "^11.3.2",
+    "discord.js-arbitrary-ffmpeg": "^1.0.0",
+    "discord.js-music-v11": "^1.3.4",
+    "es6-promise": "^4.2.4",
+    "ffmpeg": "file:ffmpeg",
+    "ffmpeg-binaries": "^4.0.0",
+    "gyp": "^0.5.0",
+    "isomorphic-fetch": "^2.2.1",
+    "opusscript": "0.0.6",
+    "winston": "^3.0.0",
+    "xmlhttprequest": "^1.8.0",
+    "youtube-dl": "^1.12.2",
+    "ytdl-core": "^0.20.4"
+  }
+}
