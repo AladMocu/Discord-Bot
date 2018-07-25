@@ -8,34 +8,20 @@ const client = new Discord.Client();
 var fs = require('fs');
 
 
+var percentColors = [
+  { pct: 0.0, color: { r: 0xff, g: 0x00, b: 0 } },
+  { pct: 0.5, color: { r: 0xff, g: 0xff, b: 0 } },
+  { pct: 1.0, color: { r: 0x00, g: 0xff, b: 0 } } ];
+
+
+
+
+
 var comm='!';
 var updatetime;
 
 
-var intervalID = setInterval(function(){fetch("https://registroapps.uniandes.edu.co/oferta_cursos/api/get_courses.php?term=201820&ptrm=1&campus=&attr=&attrs=", {
-    method: "get",
-      headers: {
-          'Referer': 'https://registroapps.uniandes.edu.co/oferta_cursos/index.php/courses?prefix=ADMI&programName=ADMINISTRACION&term=201820&offer=SEGUNDO%20SEMESTRE%202018%20PERIODO%20DE%2016%20SEMANA'
-      }
-  })
-  .then(function(response) {
-      return response.json()
-    }).then(function(json) {
-        database=json;
-        var d = new Date();
-   
-        updatetime.updated= d.toString();
-       // console.log('parsed json', json)
 
-      fs.writeFile('cursos.json',JSON.stringify(json), function (err) {
-          if (err) throw err;
-          console.log('Saved! update at: '+  updatetime.updated);
-        });
-      
-
-    }).catch(function(ex) {
-      console.log('parsing failed', ex)
-    })}, 5000);
 
 
 
@@ -96,6 +82,9 @@ client.on('message', async message => {
     var nombre;
     var totales;
 
+
+
+
     for (var i=0 ; i < cursos.records.length ; i++)
     {
     if (cursos.records[i][searchField] == searchVal) {
@@ -106,10 +95,29 @@ client.on('message', async message => {
         seccion= cursos.records[i]["section"]
         code = cursos.records[i]["class"]+cursos.records[i]["course"]
         found=true;
+        var per=100*cupos/totales;
+        console.log("porcentaje es: "+ per);
+      }
+       
     }
+    var color = function(percent) {
+     
+      r = percent<50 ? 255 : Math.floor(255-(percent*2-100)*255/100);
+      g = percent>50 ? 255 : Math.floor((percent*2)*255/100);
+      function componentToHex(c) {
+        var hex = c.toString(16);
+        return hex.length == 1 ? "0" + hex : hex;
     }
+    
+    return parseInt(componentToHex(r) + componentToHex(g) + componentToHex(0),16);
+  
+  
+  }  
+    var stats = fs.statSync("./cursos.json");
+    var mtime = stats.mtime;
+    console.log(mtime);
     if(found){message.channel.send({embed: {
-      color: 3447003,
+      color: color(per),
       author: {
         name: client.user.username,
         icon_url: client.user.avatarURL
@@ -120,19 +128,112 @@ client.on('message', async message => {
       fields: [
         {
           name: code,
-          value: "La materia con nrc: "+args[1]+" tiene "+cupos+" cupos disponibles  de "+totales
+          value: "La materia con nrc: "+args[1]+" tiene ***"+cupos+"*** cupos disponibles  de "+totales
         },
       ],
       timestamp: new Date(),
       footer: {
         icon_url: client.user.avatarURL,
-        text: "© AladMocuBots updated : "+updatetime.updated
+       
+        text: "© AladMocuBots updated : "+mtime
       }
       }
       });
     
-      }
+      
     }
+
+
+    
+  
+  }
+
+  if(message.content.startsWith(comm+'horario'))
+  {
+    var args = message.content.substring(9).split(' ');
+
+
+    if(!args.length==2)
+    {
+      message.reply("uso del commando: "+comm+"cupos [NRC]")
+    }
+
+    
+    for(var k=0;k<args.length;k++)
+    {
+    var searchField = "nrc";
+    var searchVal = args[k];
+    var cursos = require('./cursos.json')
+    var cupos;
+    var found=false;
+    var nombre;
+    var totales;
+
+    for (var i=0 ; i < cursos.records.length ; i++)
+    {
+    if (cursos.records[i][searchField] == searchVal) {
+  
+        cupos=cursos.records[i]["empty"]
+        nombre= cursos.records[i]["title"]
+        totales= cursos.records[i]["limit"]
+        seccion= cursos.records[i]["section"]
+        code = cursos.records[i]["class"]+cursos.records[i]["course"]
+        found=true;
+        var per=100*cupos/totales;
+        console.log("porcentaje es: "+ per);
+      }
+       
+    }
+    var color = function(percent) {
+     
+      r = percent<50 ? 255 : Math.floor(255-(percent*2-100)*255/100);
+      g = percent>50 ? 255 : Math.floor((percent*2)*255/100);
+      function componentToHex(c) {
+        var hex = c.toString(16);
+        return hex.length == 1 ? "0" + hex : hex;
+    }
+    
+    return parseInt(componentToHex(r) + componentToHex(g) + componentToHex(0),16);
+  
+  
+  }  
+    var stats = fs.statSync("./cursos.json");
+    var mtime = stats.mtime;
+    console.log(mtime);
+    if(found){message.channel.send({embed: {
+      color: color(per),
+      author: {
+        name: message.username,
+        icon_url: client.user.avatarURL
+      },
+      title: nombre,
+      url: "",
+      description: "Seccion "+seccion,
+      fields: [
+        {
+          name: code,
+          value: "La materia con nrc: "+searchVal+" tiene ***"+cupos+"*** cupos disponibles  de "+totales
+        },
+      ],
+      timestamp: new Date(),
+      footer: {
+        icon_url: client.user.avatarURL,
+       
+        text: "© AladMocuBots updated : "+mtime
+      }
+      }
+      });
+    
+      
+    }
+
+
+    
+  
+  }
+  
+}
+
 
     
     /*
@@ -227,3 +328,8 @@ else{
 music(client);
 
 client.login(auth.token);
+
+function componentToHex(c) {
+  var hex = c.toString(16);
+  return hex.length == 1 ? "0" + hex : hex;
+}
